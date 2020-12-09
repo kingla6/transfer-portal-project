@@ -14,10 +14,13 @@ library(lubridate)
 transfer_portal <- read.csv('raw-data/transfers.csv') %>% clean_names()
 ```
 
+```{r}
+current_date <- '12/8/2020'
+```
+
 # Clean and subset data from transfer portal
 ```{r}
 start_date <- '11/16/2020'
-current_date <- '12/8/2020'
 
 transfer_portal <- transfer_portal %>% 
   # change date columns to actual date objects, this will allow for filtering by date
@@ -34,5 +37,46 @@ setwd("C:/Users/kingl/Desktop/Projects/football/transfer-portal-project/clean-da
 write.csv(transfer_portal, file = paste0('transfer-portal-', mdy(current_date), '.csv'))
 ```
 
+# Clean offensive data from PFF
+```{r}
+pff_offense <- read.csv('raw-data/pff-offense.csv')[,c(2:7,13)] %>% clean_names()
+names(pff_offense) <- c('name', 'team', 'school', 'jersey', 'position', 'offensive_snaps', 'offensive_grade')
 
+season <- rep(year(mdy(current_date)), nrow(pff_offense))
+pff_offense <- cbind(season, pff_offense) %>% as.data.frame()
+```
+
+# Clean defensive data from PFF
+```{r}
+pff_defense <- read.csv('raw-data/pff-defense.csv')[,c(2:7,12)] %>% clean_names()
+names(pff_defense) <- c('name', 'team', 'school', 'jersey', 'position', 'defensive_snaps', 'defensive_grade')
+
+season <- rep(year(mdy(current_date)), nrow(pff_defense))
+pff_defense <- cbind(season, pff_defense) %>% as.data.frame()
+```
+
+# Clean special teams data from PFF
+```{r}
+pff_st <- read.csv('raw-data/pff-st.csv')[,c(2:7,14)] %>% clean_names()
+names(pff_st) <- c('name', 'team', 'school', 'jersey', 'position', 'st_snaps', 'st_grade')
+
+season <- rep(year(mdy(current_date)), nrow(pff_st))
+pff_st <- cbind(season, pff_st) %>% as.data.frame()
+```
+
+# Join tables together, having separate off, def, and st values for each player
+```{r}
+pff_data <- rbind(pff_offense[,1:6], pff_defense[,1:6], pff_st[,1:6]) %>% unique()
+
+pff_data <- pff_data %>% 
+  left_join(pff_offense) %>% 
+  left_join(pff_defense) %>%
+  left_join(pff_st)
+```
+
+# Write pff data to csv
+```{r}
+setwd("C:/Users/kingl/Desktop/Projects/football/transfer-portal-project/clean-data/")
+write.csv(pff_data, file = paste0('pff-', mdy(current_date), '.csv'))
+```
 
