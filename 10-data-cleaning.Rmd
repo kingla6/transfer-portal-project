@@ -1,0 +1,38 @@
+---
+title: "R Notebook"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(lubridate)
+```
+
+
+```{r}
+transfer_portal <- read.csv('raw-data/transfers.csv') %>% clean_names()
+```
+
+# Clean and subset data from transfer portal
+```{r}
+start_date <- '11/16/2020'
+current_date <- '12/8/2020'
+
+transfer_portal <- transfer_portal %>% 
+  # change date columns to actual date objects, this will allow for filtering by date
+  mutate(initiated_date = mdy(initiated_date),
+         last_updated = mdy(last_updated)) %>% 
+  # filter by date and athletes that did not withdraw
+  filter(initiated_date >= mdy(start_date),
+         student_status != 'Withdrawn')
+```
+
+# Write updated transfer data to csv
+```{r}
+setwd("C:/Users/kingl/Desktop/Projects/football/transfer-portal-project/clean-data/")
+write.csv(transfer_portal, file = paste0('transfer-portal-', mdy(current_date), '.csv'))
+```
+
+
+
